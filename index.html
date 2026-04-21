@@ -7,39 +7,37 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
-    :root { 
-      --teal: #20c997; --teal-dark: #12b886; --navy: #0a192f; 
-      --bg: #f8f9fa; --text: #212529; --sub: #868e96; --red: #fa5252; 
-    }
+    :root { --teal: #20c997; --teal-dark: #12b886; --navy: #0a192f; --bg: #f8f9fa; --text: #212529; --sub: #868e96; --red: #fa5252; }
     body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; color: var(--text); }
     .page { display: none; height: 100%; flex-direction: column; animation: fadeIn 0.3s; background: var(--bg); }
     .page.active { display: flex; }
     
     .btn { border: none; border-radius: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; height: 56px; font-size: 16px; }
     .btn:active { transform: scale(0.97); opacity: 0.9; }
-    .btn:disabled { background: #ced4da !important; color: #868e96 !important; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn:disabled { background: #ced4da !important; color: #868e96 !important; cursor: not-allowed; }
     .btn-main { background: var(--teal); color: white; }
     .btn-navy { background: var(--navy); color: white; }
     .btn-sub { background: #e9ecef; color: var(--navy); }
-    .btn-red { background: #fff5f5; color: var(--red); }
     
     .card { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
     input, select { width: 100%; padding: 16px; border: 1px solid #dee2e6; border-radius: 14px; box-sizing: border-box; font-size: 16px; outline: none; }
     input:focus { border-color: var(--teal); }
 
-    .top-nav { height: 60px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #e9ecef; flex-shrink: 0; }
-    .nav-title { font-weight: 700; color: var(--navy); font-size: 18px; }
+    /* 헤더(Top Nav) 레이아웃 고정: 좌/중앙/우 3등분으로 홈버튼 우측 고정 */
+    .top-nav { height: 60px; background: white; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #e9ecef; flex-shrink: 0; }
+    .nav-left { width: 50px; display: flex; justify-content: center; }
+    .nav-title { flex: 1; text-align: center; font-weight: 700; color: var(--navy); font-size: 18px; }
+    .nav-right { width: 50px; display: flex; justify-content: center; }
+    
     .icon-btn { cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; transition: 0.2s; color: var(--navy); }
     .icon-btn:active { background: #f1f3f5; color: var(--teal); }
     .icon-btn svg { width: 24px; height: 24px; stroke-width: 2.5; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .nav-spacer { width: 40px; }
 
     #page-home { justify-content: center; align-items: center; padding: 20px; gap: 16px; }
     .logo-box { position: absolute; top: 40px; left: 40px; display: flex; align-items: center; gap: 12px; }
-    .logo-img { width: 50px; height: 50px; border-radius: 50%; }
     .branding { position: absolute; bottom: 30px; width: 100%; text-align: center; color: var(--sub); font-size: 12px; }
 
-    .tab-wrap { display: flex; gap: 8px; overflow-x: auto; padding: 12px 20px; background: white; border-bottom: 1px solid #e9ecef; scrollbar-width: none; flex-shrink: 0; }
+    .tab-wrap { display: flex; gap: 8px; overflow-x: auto; padding: 12px 20px; background: white; border-bottom: 1px solid #e9ecef; flex-shrink: 0; scrollbar-width: none; }
     .tab { padding: 8px 16px; border-radius: 12px; background: #f1f3f5; white-space: nowrap; font-size: 14px; cursor: pointer; color: var(--sub); }
     .tab.active { background: var(--navy); color: white; font-weight: bold; }
     .grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; padding: 20px; overflow-y: auto; }
@@ -47,15 +45,20 @@
     .p-item img { width: 100%; height: 90px; object-fit: contain; margin-bottom: 8px; }
 
     .drawer { background: white; border-radius: 32px 32px 0 0; padding: 24px; box-shadow: 0 -10px 40px rgba(0,0,0,0.06); height: 38%; display: flex; flex-direction: column; flex-shrink: 0; }
-    .c-list { flex: 1; overflow-y: auto; }
     .c-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f3f5; }
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(4px); }
-    .modal-box { background: white; padding: 32px; border-radius: 28px; width: 340px; text-align: center; }
+    .modal-box { background: white; padding: 32px; border-radius: 28px; width: 340px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
     
     #setup-page { position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:none; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; box-sizing:border-box; }
 
+    /* 영수증 CSS */
+    .receipt-paper { background: #fff; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: 'Courier New', Courier, monospace; position: relative; color: #333; margin: 10px 0; text-align:left; }
+    .receipt-paper::before { content: ''; position: absolute; bottom: -8px; left: 0; width: 100%; height: 8px; background: radial-gradient(circle at 8px 0, transparent 8px, #fff 9px) repeat-x; background-size: 16px 8px; }
+    
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(32, 201, 151, 0.3); border-radius: 50%; border-top-color: var(--teal); animation: spin 1s ease-in-out infinite; margin-top: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -77,13 +80,12 @@
 <svg style="display:none;">
   <symbol id="icon-back" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></symbol>
   <symbol id="icon-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></symbol>
-  <symbol id="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol>
 </svg>
 
-<div id="main-app" style="display:none; height:100%;">
+<div id="main-app" style="height:100%; display:none;">
 
-  <div id="page-home" class="page">
-    <div class="logo-box"><img src="https://i.imgur.com/pNk2fly.png" class="logo-img"><div><div style="font-size:12px; color:var(--sub);">초리쌤의 콘텐츠</div><div style="font-size:20px; font-weight:700; color:var(--navy);">스마트 키오스크</div></div></div>
+  <div id="page-home" class="page active">
+    <div class="logo-box"><img src="https://i.imgur.com/pNk2fly.png" style="width:50px; height:50px; border-radius:50%;"><div><div style="font-size:12px; color:var(--sub);">초리쌤의 콘텐츠</div><div style="font-size:20px; font-weight:700; color:var(--navy);">스마트 키오스크</div></div></div>
     <button class="btn btn-navy" style="width:280px; height:80px; font-size:20px;" onclick="navToKiosk()">🛍️ 키오스크 모드</button>
     <button class="btn btn-main" style="width:280px; height:80px; font-size:20px;" onclick="navTo('page-student-login')">📱 학생 지갑 모드</button>
     <div class="branding">© Chori-ssam. All Rights Reserved.<br><span onclick="adminOpen()" style="opacity:0.3; cursor:pointer; padding:10px;">관리자 설정</span></div>
@@ -91,15 +93,15 @@
 
   <div id="page-kiosk-shop" class="page">
     <div class="top-nav">
-      <div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div>
+      <div class="nav-left"></div>
       <div class="nav-title">상품 선택</div>
-      <div class="nav-spacer"></div>
+      <div class="nav-right"><div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div></div>
     </div>
     <div class="tab-wrap" id="k-tabs"></div>
     <div class="grid" id="k-grid"></div>
     <div class="drawer">
       <div style="font-weight:700; margin-bottom:12px; color:var(--navy);">주문내역</div>
-      <div class="c-list" id="k-cart"></div>
+      <div style="flex:1; overflow-y:auto;" id="k-cart"></div>
       <div style="display:flex; justify-content:space-between; margin:16px 0;"><span style="color:var(--sub);">총 결제금액</span><span id="k-total" style="font-weight:700; font-size:22px; color:var(--teal);">0원</span></div>
       <div style="display:flex; gap:10px;"><button class="btn btn-sub" style="flex:1" onclick="clearCart()">비우기</button><button class="btn btn-main" style="flex:2" onclick="startPay()">결제하기</button></div>
     </div>
@@ -107,15 +109,14 @@
 
   <div id="page-kiosk-pay" class="page">
     <div class="top-nav">
-      <div class="icon-btn" onclick="stopPolling(); navTo('page-kiosk-shop');"><svg><use href="#icon-back"></use></svg></div>
+      <div class="nav-left"><div class="icon-btn" onclick="stopPolling(); navTo('page-kiosk-shop');"><svg><use href="#icon-back"></use></svg></div></div>
       <div class="nav-title">결제 대기</div>
-      <div class="nav-spacer"></div>
+      <div class="nav-right"><div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div></div>
     </div>
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:20px;">
       <div class="card" style="width:100%; max-width:320px; text-align:center;">
         <div style="font-weight:700; font-size:20px; margin-bottom:10px; color:var(--navy);">QR코드를 스캔해주세요</div>
-        <div style="color:var(--sub); font-size:14px; margin-bottom:24px;">학생 기기의 카메라를 사용하세요</div>
-        <div id="pay-qr" style="margin:0 auto 24px; background:#f8f9fa; width:200px; height:200px; display:flex; align-items:center; justify-content:center; border-radius:16px;">QR 생성 중...</div>
+        <div id="pay-qr" style="margin:24px auto; background:#f8f9fa; width:200px; height:200px; display:flex; align-items:center; justify-content:center; border-radius:16px;"></div>
         <div style="color:var(--teal); font-weight:700; font-size:18px; animation: fadeIn 1s infinite alternate;">⌛ 스캔 대기 중...</div>
       </div>
     </div>
@@ -123,129 +124,74 @@
 
   <div id="page-student-login" class="page">
     <div class="top-nav">
-      <div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div>
+      <div class="nav-left"></div>
       <div class="nav-title">지갑 로그인</div>
-      <div class="nav-spacer"></div>
+      <div class="nav-right"><div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div></div>
     </div>
     <div style="padding:40px 24px; display:flex; flex-direction:column; justify-content:center; flex:1;">
       <input type="text" id="s-login-id" placeholder="학번 ID (예: 3105)" style="margin-bottom:12px;">
       <input type="password" id="s-login-pw" placeholder="비밀번호 숫자 4자리" maxlength="4" style="margin-bottom:24px;">
-      <button class="btn btn-teal" style="background:var(--teal); color:white;" onclick="handleLogin()">내 지갑 열기</button>
-      <div style="text-align:center; margin-top:32px; color:var(--sub); font-size:14px;" onclick="navTo('page-student-join')">아직 회원이 아니신가요? <b style="color:var(--navy); cursor:pointer;">회원가입</b></div>
-    </div>
-  </div>
-
-  <div id="page-student-join" class="page">
-    <div class="top-nav">
-      <div class="icon-btn" onclick="navTo('page-student-login')"><svg><use href="#icon-back"></use></svg></div>
-      <div class="nav-title">회원가입</div>
-      <div class="nav-spacer"></div>
-    </div>
-    <div style="padding:30px 24px; overflow-y:auto; flex:1;">
-      <div style="font-weight:700; color:var(--navy); margin-bottom:16px;">학생 정보 입력</div>
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <input type="number" id="j-grade" placeholder="학년">
-        <input type="number" id="j-class" placeholder="반">
-        <input type="number" id="j-num" placeholder="번호">
-      </div>
-      <input type="text" id="j-name" placeholder="이름" style="margin-bottom:24px;">
-      
-      <div style="font-weight:700; color:var(--navy); margin-bottom:16px;">보안 설정</div>
-      <input type="password" id="j-pw" placeholder="결제 비밀번호 (숫자 4자리)" maxlength="4" style="margin-bottom:12px;">
-      <input type="password" id="j-pw2" placeholder="비밀번호 다시 입력" maxlength="4" style="margin-bottom:32px;">
-      
-      <button class="btn btn-main" style="width:100%;" onclick="handleJoin()">가입 완료</button>
+      <button class="btn btn-main" onclick="handleLogin()">내 지갑 열기</button>
     </div>
   </div>
 
   <div id="page-student-wallet" class="page">
     <div class="top-nav">
-      <div class="nav-spacer"></div>
+      <div class="nav-left"></div>
       <div class="nav-title">내 지갑</div>
-      <div class="icon-btn" onclick="goHome()" title="로그아웃"><svg><use href="#icon-home"></use></svg></div>
+      <div class="nav-right"><div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div></div>
     </div>
     <div style="padding:24px; flex:1;">
-      <div class="card" style="background: linear-gradient(135deg, var(--navy), #1a365d); color:white; margin-bottom:32px; border:none;">
+      <div class="card" style="background: linear-gradient(135deg, var(--navy), #1a365d); color:white; margin-bottom:24px; border:none;">
         <div id="s-name-disp" style="font-size:15px; opacity:0.9; margin-bottom:8px;">반갑습니다!</div>
         <div id="s-bal-disp" style="font-size:36px; font-weight:700; margin-bottom:16px;">0원</div>
         <div style="font-size:13px; opacity:0.7; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;">교실 경제 자산 현황</div>
       </div>
-      <button class="btn btn-main" style="width:100%; height:80px; font-size:20px; box-shadow: 0 8px 20px rgba(32, 201, 151, 0.3);" onclick="openScanner()">📸 키오스크 QR 스캔결제</button>
+      <button class="btn btn-main" style="width:100%; height:70px; font-size:18px; box-shadow: 0 8px 20px rgba(32, 201, 151, 0.3);" onclick="openScanner()">📸 키오스크 결제 스캔</button>
+      <button class="btn btn-navy" style="width:100%; height:60px; font-size:16px; margin-top:12px;" onclick="openReceipts()">🧾 내 영수증 내역 확인</button>
     </div>
+  </div>
+
+  <div id="page-receipts" class="page">
+    <div class="top-nav">
+      <div class="nav-left"><div class="icon-btn" onclick="navTo('page-student-wallet')"><svg><use href="#icon-back"></use></svg></div></div>
+      <div class="nav-title">내 영수증</div>
+      <div class="nav-right"><div class="icon-btn" onclick="goHome()"><svg><use href="#icon-home"></use></svg></div></div>
+    </div>
+    <div id="receipt-list" style="padding:20px; flex:1; overflow-y:auto;"></div>
   </div>
 
   <div id="page-scanner" class="page" style="background:#000;">
     <div class="top-nav" style="background:#000; border:none;">
-      <div class="icon-btn" style="color:white;" onclick="closeScanner()"><svg><use href="#icon-back"></use></svg></div>
+      <div class="nav-left"><div class="icon-btn" style="color:white;" onclick="closeScanner()"><svg><use href="#icon-back"></use></svg></div></div>
       <div class="nav-title" style="color:white;">결제 스캔</div>
-      <div class="nav-spacer"></div>
+      <div class="nav-right"></div>
     </div>
     <div style="flex:1; display:flex; align-items:center; justify-content:center;">
       <div id="reader" style="width:100%; max-width:400px; border-radius:24px; overflow:hidden;"></div>
     </div>
   </div>
 
-  <div id="page-admin" class="page">
-    <div class="top-nav" style="background:var(--navy); border-bottom:none;">
-      <div class="nav-spacer"></div>
-      <div class="nav-title" style="color:white;">관리자 대시보드</div>
-      <div class="icon-btn" style="color:white;" onclick="goHome()"><svg><use href="#icon-close"></use></svg></div>
-    </div>
-    <div style="display:flex; background:white; border-bottom:1px solid #e9ecef; flex-shrink:0;">
-      <div class="tab" style="flex:1; text-align:center; padding:16px; border-radius:0; background:transparent;" id="ad-t0" onclick="switchAd(0)">상품 관리</div>
-      <div class="tab" style="flex:1; text-align:center; padding:16px; border-radius:0; background:transparent;" id="ad-t1" onclick="switchAd(1)">자산 관리</div>
-    </div>
-    
-    <div id="ad-p0" style="flex:1; padding:20px; overflow-y:auto;">
-      <div class="card" style="margin-bottom:24px; border:2px solid var(--teal);">
-        <div style="font-weight:700; color:var(--navy); margin-bottom:12px;">새 상품 등록 / 수정</div>
-        <input type="hidden" id="ap-id">
-        <input list="cat-list" id="ap-cat" placeholder="카테고리 (선택 또는 직접 입력)" style="margin-bottom:8px;">
-        <datalist id="cat-list"></datalist>
-        <input type="text" id="ap-name" placeholder="상품명" style="margin-bottom:8px;">
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <input type="number" id="ap-price" placeholder="가격">
-          <input type="number" id="ap-stock" placeholder="재고 수량">
-        </div>
-        <input type="text" id="ap-img" placeholder="이미지 URL (http://...)" style="margin-bottom:12px;" oninput="document.getElementById('ap-preview').src=this.value">
-        <img id="ap-preview" style="width:80px; height:80px; object-fit:contain; background:#f8f9fa; margin-bottom:16px; border-radius:12px; border:1px solid #e9ecef;">
-        <button id="btn-save-p" class="btn btn-main" style="width:100%;" onclick="saveP()">저장하기</button>
-      </div>
-      <div style="font-weight:700; color:var(--navy); margin-bottom:12px;">등록된 상품 목록</div>
-      <div id="ad-p-list"></div>
-    </div>
-    
-    <div id="ad-p1" style="flex:1; padding:20px; display:none; flex-direction:column;">
-      <div style="display:flex; gap:8px; margin-bottom:16px;">
-        <input type="text" id="as-q" placeholder="이름 또는 학번 검색" style="flex:1" oninput="filterAdS()">
-        <button class="btn btn-sub" style="width:80px;" onclick="loadAdS()">새로고침</button>
-      </div>
-      <div id="ad-s-list" style="flex:1; background:white; border-radius:20px; overflow-y:auto; padding:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);"></div>
-      <div class="card" style="margin-top:16px; background:var(--navy);">
-        <input type="number" id="as-amt" placeholder="지급/차감 금액 (예: 500 또는 -300)" style="margin-bottom:12px;">
-        <button id="btn-apply-ads" class="btn btn-teal" style="background:var(--teal); color:white; width:100%;" onclick="applyAdS()">선택된 학생 일괄 적용</button>
-      </div>
-    </div>
-  </div>
+</div>
 
-</div> <script>
-  /* --- [1. 외부 API 통신 및 초기 세팅 로직] --- */
+<script>
   let API_URL = localStorage.getItem('CHORI_API_URL');
 
-  // URL에서 공유 파라미터(?api=...) 감지하여 자동 적용
+  // URL에서 공유 파라미터(?api=...) 감지하여 자동 적용 (플랫폼 배포용)
   window.onload = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('api')) {
       API_URL = decodeURIComponent(params.get('api'));
       localStorage.setItem('CHORI_API_URL', API_URL);
-      window.history.replaceState({}, document.title, "/"); // URL 깔끔하게 정리
+      window.history.replaceState({}, document.title, window.location.pathname); // URL 깔끔하게 정리
     }
     
     if (!API_URL) {
       document.getElementById('setup-page').style.display = 'flex';
+      document.getElementById('main-app').style.display = 'none';
     } else {
+      document.getElementById('setup-page').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
-      document.getElementById('page-home').classList.add('active');
     }
   };
 
@@ -259,274 +205,138 @@
     }
   }
 
-  // 범용 API 호출 함수 (google.script.run 대체)
-  async function callApi(functionName, ...args) {
-    if (!API_URL) return null;
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // CORS 방지 트릭
-        body: JSON.stringify({ functionName, arguments: args })
-      });
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      console.error(err);
-      modal("통신 오류", "서버와 연결할 수 없습니다. 주소를 확인해주세요.");
-      return null;
-    }
-  }
-
-
-  /* --- [2. 공통 UI 로직] --- */
   let products = [], cart = [], pollInterval, currentOrderId, currentUser = null;
   const f = n => Number(n).toLocaleString() + "원";
 
+  // 화면 이동
   function navTo(id) { document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
   function goHome() { stopPolling(); currentUser=null; navTo('page-home'); closeModal(); }
   
+  // 모달 기능 (버튼 옵션 'loading' 추가)
   function modal(t, m, b=[]) {
-    const o = document.getElementById('modal-overlay'); document.getElementById('m-title').innerText=t; document.getElementById('m-text').innerHTML=m;
+    const o = document.getElementById('modal-overlay'); document.getElementById('m-title').innerText=t;
     const c = document.getElementById('m-btns'); c.innerHTML='';
-    if(b.length===0) b=[{t:'확인', c:'btn-main', f:()=>o.style.display='none'}];
-    b.forEach(x=>{ const e=document.createElement('button'); e.className='btn '+x.c; e.style.flex='1'; e.innerText=x.t; e.onclick=x.f; c.appendChild(e); });
+    if (b === 'loading') {
+      document.getElementById('m-text').innerHTML = `<div class="spinner"></div><br><br>${m}`;
+    } else {
+      document.getElementById('m-text').innerHTML = m;
+      if(b.length===0) b=[{t:'확인', c:'btn-main', f:()=>o.style.display='none'}];
+      b.forEach(x=>{ const e=document.createElement('button'); e.className='btn '+x.c; e.style.flex='1'; e.innerText=x.t; e.onclick=x.f; c.appendChild(e); });
+    }
     o.style.display='flex';
   }
   function closeModal() { document.getElementById('modal-overlay').style.display='none'; }
 
+  async function callApi(func, ...args) {
+    if (!API_URL) return null;
+    try {
+      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ functionName: func, arguments: args }) });
+      return await res.json();
+    } catch (err) { modal("통신 오류", "서버와 연결할 수 없습니다. 배포 주소를 확인해주세요."); return null; }
+  }
 
-  /* --- [3. KIOSK 로직] --- */
+  /* 키오스크 쇼핑 */
   async function navToKiosk() {
-    modal("로딩 중", "진열대를 정리하고 있습니다...");
+    modal("준비 중", "진열대를 정리하고 있습니다...", 'loading');
     const data = await callApi('getProducts');
-    if (!data) return;
-    
-    products = data;
-    const cats = ["전체", ...new Set(data.map(p=>p.category))];
-    document.getElementById('k-tabs').innerHTML = cats.map(c=>`<div class="tab" onclick="filterK('${c}', this)">${c}</div>`).join('');
-    document.getElementById('k-tabs').firstChild.classList.add('active');
-    filterK("전체");
-    closeModal();
-    navTo('page-kiosk-shop');
+    if(!data) return;
+    products = data; filterK("전체");
+    closeModal(); navTo('page-kiosk-shop');
   }
-
-  function filterK(c, el) {
-    if(el) { document.querySelectorAll('#k-tabs .tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); }
+  function filterK(c) {
     const filtered = c === "전체" ? products : products.filter(p=>p.category===c);
-    document.getElementById('k-grid').innerHTML = filtered.map(p=>`
-      <div class="p-item" onclick="addK('${p.id}')">
-        <img src="${p.img||'https://via.placeholder.com/100'}">
-        <div style="font-weight:500; font-size:14px; margin-bottom:4px; color:var(--navy);">${p.name}</div>
-        <div style="color:var(--teal); font-weight:700;">${f(p.price)}</div>
-      </div>`).join('');
+    document.getElementById('k-grid').innerHTML = filtered.map(p=>`<div class="p-item" onclick="addK('${p.id}')"><img src="${p.img}"><div style="font-size:14px;">${p.name}</div><div style="color:var(--teal); font-weight:700;">${f(p.price)}</div></div>`).join('');
   }
-
-  function addK(id) {
-    const p = products.find(x=>x.id===id); const i = cart.find(x=>x.id===id);
-    if(i) i.qty++; else cart.push({...p, qty:1}); updateCart();
-  }
+  function addK(id) { const p = products.find(x=>x.id===id); const i = cart.find(x=>x.id===id); if(i) i.qty++; else cart.push({...p, qty:1}); updateCart(); }
   function updateCart() {
-    document.getElementById('k-cart').innerHTML = cart.map((i,idx)=>`
-      <div class="c-row">
-        <div><div style="font-weight:700; color:var(--navy);">${i.name}</div><div style="font-size:13px; color:var(--sub);">${f(i.price*i.qty)}</div></div>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button style="border:1px solid #dee2e6; background:white; width:28px; height:28px; border-radius:6px; color:var(--navy);" onclick="changeQty(${idx},-1)">-</button>
-          <span style="font-weight:500;">${i.qty}</span>
-          <button style="border:1px solid #dee2e6; background:white; width:28px; height:28px; border-radius:6px; color:var(--navy);" onclick="changeQty(${idx},1)">+</button>
-          <span style="color:var(--red); margin-left:8px; cursor:pointer; font-weight:bold;" onclick="cart.splice(${idx},1);updateCart();">✕</span>
-        </div>
-      </div>`).join('');
+    document.getElementById('k-cart').innerHTML = cart.map((i,idx)=>`<div class="c-row"><div><b>${i.name}</b> <small>${f(i.price*i.qty)}</small></div><div><button onclick="cart[${idx}].qty--; if(cart[${idx}].qty<=0) cart.splice(${idx},1); updateCart();">-</button> ${i.qty} <button onclick="cart[${idx}].qty++; updateCart();">+</button></div></div>`).join('');
     document.getElementById('k-total').innerText = f(cart.reduce((s,i)=>s+(i.price*i.qty),0));
   }
-  function changeQty(i, d) { cart[i].qty+=d; if(cart[i].qty<=0) cart.splice(i,1); updateCart(); }
   function clearCart() { cart=[]; updateCart(); }
 
+  /* 키오스크 결제 (결제 완료 후 상점으로 이동) */
   async function startPay() {
     if(cart.length===0) return modal("앗", "장바구니가 비어있습니다.");
-    const total = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-    const sum = cart.map(i=>`${i.name}(${i.qty})`).join(', ');
-    
-    modal("QR 생성 중", "결제 코드를 만들고 있습니다...");
-    const orderId = await callApi('createPaymentRequest', total, sum);
-    if (!orderId) return;
-    
-    currentOrderId = orderId;
-    document.getElementById('pay-qr').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${orderId}" width="180">`;
-    navTo('page-kiosk-pay');
-    closeModal();
-    startPolling();
+    modal("QR 생성 중", "코드를 만들고 있습니다...", 'loading');
+    currentOrderId = await callApi('createPaymentRequest', cart.reduce((s,i)=>s+(i.price*i.qty),0), cart.map(i=>`${i.name}(${i.qty})`).join(', '));
+    document.getElementById('pay-qr').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentOrderId}" width="180">`;
+    navTo('page-kiosk-pay'); closeModal(); startPolling();
   }
-
   function startPolling() {
     pollInterval = setInterval(async () => {
-      const status = await callApi('checkPaymentStatus', currentOrderId);
-      if(status === "완료") {
-        stopPolling();
-        clearCart();
-        modal("🎉 결제 성공!", "정상적으로 결제되었습니다.<br>잠시 후 홈으로 돌아갑니다.", [{t:'확인', c:'btn-main', f:goHome}]);
-        setTimeout(goHome, 3500);
+      if(await callApi('checkPaymentStatus', currentOrderId) === "완료") {
+        stopPolling(); clearCart();
+        modal("🎉 결제 성공", "정상적으로 결제되었습니다.<br>잠시 후 상점으로 돌아갑니다.", 'loading'); // 확인 버튼 제거
+        setTimeout(() => { navToKiosk(); }, 2500); // 2.5초 뒤 키오스크 상점으로 복귀
       }
     }, 2000);
   }
   function stopPolling() { clearInterval(pollInterval); }
 
+  /* 지갑 로직 */
+  async function handleLogin() {
+    const id = document.getElementById('s-login-id').value, pw = document.getElementById('s-login-pw').value;
+    if(!id || !pw) return modal("알림", "정보를 입력해주세요.");
+    modal("로그인 중", "지갑을 열고 있습니다...", 'loading');
+    const res = await callApi('loginStudent', id, pw);
+    if(res && res.success) { currentUser = id; document.getElementById('s-name-disp').innerText = `${res.name} 학생`; document.getElementById('s-bal-disp').innerText = f(res.balance); closeModal(); navTo('page-student-wallet'); }
+    else modal("실패", res.msg);
+  }
 
-  /* --- [4. STUDENT WALLET & SCANNER 로직] --- */
-  async function handleJoin() {
-    const s = { grade:document.getElementById('j-grade').value, class:document.getElementById('j-class').value, num:document.getElementById('j-num').value, name:document.getElementById('j-name').value, pw:document.getElementById('j-pw').value };
-    if(!s.pw || s.pw !== document.getElementById('j-pw2').value) return modal("오류", "비밀번호가 일치하지 않습니다.");
-    
-    modal("처리 중", "회원 정보를 등록하는 중입니다...");
-    const res = await callApi('registerStudent', s);
-    if(!res) return;
-    
-    if(res.success) {
-      modal("환영합니다!", `가입 완료!<br>축하금 <b style="color:var(--teal);">1,000원</b>이 지급되었습니다. 🎁<br><br>학번 ID는 <b style="color:var(--teal); font-size:18px;">${res.id}</b> 입니다.`, [{t:'로그인하기', c:'btn-main', f:()=> { closeModal(); navTo('page-student-login'); }}]);
-    } else {
-      modal("가입 실패", res.msg);
+  /* 학생 QR 스캔 결제 (결제 완료 후 지갑으로 이동) */
+  let scanner;
+  function openScanner() { navTo('page-scanner'); scanner = new Html5Qrcode("reader"); scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScan).catch(()=>modal("오류", "카메라 권한을 허용해주세요.", [{t:'돌아가기', c:'btn-main', f:()=>closeScanner()}])); }
+  function closeScanner() { if(scanner) scanner.stop().catch(e=>console.log(e)); navTo('page-student-wallet'); }
+  function onScan(orderId) {
+    scanner.stop();
+    modal("결제 승인", "키오스크의 결제를 승인하시겠습니까?", [ {t:'취소', c:'btn-sub', f:()=>closeScanner()}, {t:'승인하기', c:'btn-main', f:async ()=> {
+        modal("처리 중", "결제 중입니다...", 'loading');
+        const res = await callApi('approvePayment', orderId, currentUser);
+        if(res && res.success) {
+          document.getElementById('s-bal-disp').innerText = f(res.newBalance); // 지갑 잔액 즉시 갱신
+          modal("결제 완료", "성공적으로 결제되었습니다.", 'loading'); // 확인 버튼 없는 로딩창
+          setTimeout(() => { closeModal(); navTo('page-student-wallet'); }, 1500); // 1.5초 뒤 지갑 메인으로 복귀
+        } else modal("실패", res.msg, [{t:'확인', c:'btn-main', f:()=>closeScanner()}]);
+    }}]);
+  }
+
+  /* 영수증 목록 보기 */
+  async function openReceipts() {
+    navTo('page-receipts');
+    document.getElementById('receipt-list').innerHTML = `<div style="text-align:center; padding:40px;"><div class="spinner"></div><br><br><span style="color:var(--sub)">불러오는 중...</span></div>`;
+    const res = await callApi('getReceipts', currentUser);
+    if(res && res.success) {
+      if(res.list.length === 0) { document.getElementById('receipt-list').innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>구매 내역이 없습니다.</div>"; } 
+      else {
+        document.getElementById('receipt-list').innerHTML = res.list.map(r => `
+          <div class="card" style="margin-bottom:12px; cursor:pointer; padding:16px; border:1px solid #e9ecef;" onclick='showReceiptDetail(${JSON.stringify(r)})'>
+            <div style="font-size:12px; color:var(--sub); margin-bottom:4px;">${r.date}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-weight:700; color:var(--navy);">${r.summary}</div>
+              <div style="font-weight:700; color:var(--teal);">${f(r.amount)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
     }
   }
 
-  async function handleLogin() {
-    const id = document.getElementById('s-login-id').value;
-    const pw = document.getElementById('s-login-pw').value;
-    if(!id || !pw) return modal("알림", "ID와 비밀번호를 입력해주세요.");
-    
-    modal("로그인 중", "지갑 정보를 가져오고 있습니다...");
-    const res = await callApi('loginStudent', id, pw);
-    if(!res) return;
-    
-    closeModal();
-    if(res.success) {
-      currentUser = id;
-      document.getElementById('s-name-disp').innerText = `${res.name} 학생, 환영합니다.`;
-      document.getElementById('s-bal-disp').innerText = f(res.balance);
-      navTo('page-student-wallet');
-    } else modal("로그인 실패", res.msg);
-  }
-
-  let scanner;
-  function openScanner() {
-    navTo('page-scanner');
-    scanner = new Html5Qrcode("reader");
-    // 외부 웹서버 환경에서는 이 옵션이 실시간 후면 카메라를 정상적으로 호출합니다.
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScan).catch(err => {
-      modal("카메라 오류", "카메라 접근 권한을 허용해주세요.", [{t:'돌아가기', c:'btn-main', f:()=> { closeModal(); closeScanner(); }}]);
-    });
-  }
-  function closeScanner() { if(scanner) { scanner.stop().then(()=>scanner.clear()).catch(e=>console.log(e)); } navTo('page-student-wallet'); }
-  
-  function onScan(orderId) {
-    scanner.stop().then(()=>scanner.clear());
-    modal("결제 승인", "스캔 완료! 키오스크의 결제를 승인하시겠습니까?", [
-      {t:'취소', c:'btn-sub', f:()=> { closeModal(); closeScanner(); }},
-      {t:'승인하기', c:'btn-main', f:async ()=> {
-        modal("처리 중", "결제를 서버에 전송 중입니다...");
-        const res = await callApi('approvePayment', orderId, currentUser);
-        if(!res) return;
-        
-        if(res.success) modal("결제 완료", "성공적으로 결제되었습니다.", [{t:'지갑으로', c:'btn-main', f:()=> { closeModal(); document.getElementById('s-login-pw').value=''; handleLogin(); }}]);
-        else modal("실패", res.msg, [{t:'뒤로', c:'btn-sub', f:()=> { closeModal(); navTo('page-student-wallet'); }}]);
-      }}
-    ]);
-  }
-
-  /* --- [5. ADMIN 로직] --- */
-  function adminOpen() { const p = prompt("교사 PIN 번호 입력"); if(p==="5863") { navTo('page-admin'); switchAd(0); } }
-  function switchAd(n) {
-    document.getElementById('ad-p0').style.display=n===0?'block':'none';
-    document.getElementById('ad-p1').style.display=n===1?'flex':'none';
-    document.getElementById('ad-t0').style.color=n===0?'var(--teal)':'var(--navy)';
-    document.getElementById('ad-t0').style.fontWeight=n===0?'700':'400';
-    document.getElementById('ad-t0').style.borderBottom=n===0?'3px solid var(--teal)':'none';
-    document.getElementById('ad-t1').style.color=n===1?'var(--teal)':'var(--navy)';
-    document.getElementById('ad-t1').style.fontWeight=n===1?'700':'400';
-    document.getElementById('ad-t1').style.borderBottom=n===1?'3px solid var(--teal)':'none';
-    if(n===0) loadAdP(); else loadAdS();
-  }
-  
-  async function loadAdP() {
-    document.getElementById('ad-p-list').innerHTML = "불러오는 중...";
-    const data = await callApi('getProducts');
-    if(!data) return;
-    
-    products = data;
-    const cats = [...new Set(data.map(p=>p.category).filter(c=>c))];
-    document.getElementById('cat-list').innerHTML = cats.map(c=>`<option value="${c}">`).join('');
-
-    document.getElementById('ad-p-list').innerHTML = data.map(p=>`
-      <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:16px;">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <img src="${p.img}" width="48" height="48" style="object-fit:contain; border-radius:8px; border:1px solid #eee;">
-          <div><b style="color:var(--navy);">${p.name}</b><br><small style="color:var(--teal); font-weight:700;">${f(p.price)}</small> <small style="color:var(--sub)">| 재고: ${p.stock}</small></div>
+  /* 열화상 스타일 영수증 팝업 */
+  function showReceiptDetail(r) {
+    const content = `
+      <div class="receipt-paper">
+        <h2 style="text-align:center; margin:0 0 16px; font-weight:900; color:#111;">초리 상점</h2>
+        <div style="border-bottom:2px dashed #cbd5e1; margin-bottom:16px;"></div>
+        <div style="text-align:left; font-size:14px; margin-bottom:8px; display:flex; justify-content:space-between;"><span style="color:#64748b">일시</span> <span style="font-weight:bold">${r.date}</span></div>
+        <div style="text-align:left; font-size:14px; margin-bottom:20px; line-height:1.4;"><span style="color:#64748b; display:block; margin-bottom:4px;">구매품목</span> <span style="font-weight:bold; word-break:keep-all;">${r.summary}</span></div>
+        <div style="border-bottom:2px dashed #cbd5e1; margin-bottom:16px;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-weight:900; font-size:18px;">
+          <span>결제금액</span> <span style="color:var(--teal)">${f(r.amount)}</span>
         </div>
-        <button class="btn btn-sub" style="height:36px; padding:0 16px; font-size:13px;" onclick="editP('${p.id}')">수정</button>
-      </div>`).join('');
-  }
-  
-  async function saveP() {
-    const p = { id:document.getElementById('ap-id').value, category:document.getElementById('ap-cat').value, name:document.getElementById('ap-name').value, price:document.getElementById('ap-price').value, stock:document.getElementById('ap-stock').value, img:document.getElementById('ap-img').value };
-    if(!p.name || !p.price) return modal("알림", "상품명과 가격을 입력하세요.");
-    
-    const btn = document.getElementById('btn-save-p');
-    btn.disabled = true; btn.innerText = "저장 중...";
-    
-    const res = await callApi('saveProduct', p);
-    btn.disabled = false; btn.innerText = "저장하기";
-    if(!res) return;
-    
-    modal("저장 완료", "상품 정보가 저장되었습니다."); 
-    loadAdP(); 
-    document.querySelectorAll('#ad-p0 input').forEach(i=>i.value=''); 
-    document.getElementById('ap-preview').src=''; 
-  }
-
-  function editP(id) {
-    const p = products.find(x=>x.id===id);
-    document.getElementById('ap-id').value = p.id; document.getElementById('ap-cat').value = p.category;
-    document.getElementById('ap-name').value = p.name; document.getElementById('ap-price').value = p.price;
-    document.getElementById('ap-stock').value = p.stock; document.getElementById('ap-img').value = p.img;
-    document.getElementById('ap-preview').src = p.img;
-    window.scrollTo(0,0);
-  }
-
-  let adminStudents = [];
-  async function loadAdS() {
-    document.getElementById('ad-s-list').innerHTML = "학생 데이터를 불러오는 중...";
-    const data = await callApi('getAdminStudents');
-    if(!data) return;
-    adminStudents = data; 
-    renderAdS(data);
-  }
-  function renderAdS(data) {
-    document.getElementById('ad-s-list').innerHTML = data.map(s => `
-      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #f8f9fa;">
-        <input type="checkbox" class="as-check" value="${s.id}" style="width:20px; height:20px;">
-        <div style="flex:1;"><b style="color:var(--navy);">${s.grade}학년 ${s.class}반 ${s.name}</b><br><small style="color:var(--sub);">ID: ${s.id}</small></div>
-        <div style="font-weight:700; color:var(--teal);">${f(s.balance)}</div>
-      </div>`).join('');
-  }
-  function filterAdS() {
-    const q = document.getElementById('as-q').value.toLowerCase();
-    const filtered = adminStudents.filter(s => s.name.toLowerCase().includes(q) || s.id.includes(q));
-    renderAdS(filtered);
-  }
-  
-  async function applyAdS() {
-    const ids = Array.from(document.querySelectorAll('.as-check:checked')).map(c=>c.value);
-    const amt = document.getElementById('as-amt').value;
-    if(ids.length===0 || !amt) return modal("알림", "대상을 선택하고 금액을 정확히 입력하세요.");
-    
-    const btn = document.getElementById('btn-apply-ads');
-    btn.disabled = true; btn.innerText = "처리 중...";
-    
-    const res = await callApi('updateAdminAsset', ids, amt);
-    btn.disabled = false; btn.innerText = "선택된 학생 일괄 적용";
-    if(!res) return;
-    
-    modal("적용 완료", "학생 자산이 성공적으로 변경되었습니다."); 
-    document.getElementById('as-amt').value=''; 
-    loadAdS(); 
+        <div style="margin-top:24px; font-size:12px; color:#94a3b8; text-align:center;">이용해 주셔서 감사합니다.</div>
+      </div>
+    `;
+    modal("상세 영수증", content, [{t:'닫기', c:'btn-main', f:closeModal}]);
   }
 </script>
 </body>
