@@ -3,236 +3,304 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>초리쌤 스마트 키오스크 v4.0</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>초리쌤 스마트 키오스크 v4.2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
-    :root { --teal: #20c997; --navy: #0a192f; --bg: #f8f9fa; --red: #fa5252; }
-    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); margin: 0; height: 100vh; overflow: hidden; }
-    .page { display: none; height: 100%; flex-direction: column; background: var(--bg); }
+    :root { --teal: #20c997; --navy: #0a192f; --bg: #f8f9fa; --red: #fa5252; --sub: #868e96; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); margin: 0; height: 100vh; overflow: hidden; color: #212529; }
+    .page { display: none; height: 100%; flex-direction: column; background: var(--bg); animation: fadeIn 0.3s; }
     .page.active { display: flex; }
-    .btn { border: none; border-radius: 12px; padding: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    
+    .btn { border: none; border-radius: 16px; padding: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size:16px; display:flex; align-items:center; justify-content:center; }
+    .btn:active { transform: scale(0.97); opacity: 0.9; }
     .btn-main { background: var(--teal); color: white; }
+    .btn-navy { background: var(--navy); color: white; }
     .btn-sub { background: #e9ecef; color: var(--navy); }
-    .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin: 10px; }
+    .card { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); margin: 10px; }
+    input { width: 100%; padding: 16px; margin-bottom: 12px; border: 1px solid #dee2e6; border-radius: 14px; box-sizing: border-box; outline:none; font-size:16px; transition:0.2s; }
+    input:focus { border-color: var(--teal); }
     
-    /* 영수증 테이블 스타일 */
+    /* 영수증 전용 CSS */
+    .receipt-paper { background: #fff; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; position: relative; margin-bottom:15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .receipt-paper::before { content: ''; position: absolute; bottom: -8px; left: 0; width: 100%; height: 8px; background: radial-gradient(circle at 8px 0, transparent 8px, #fff 9px) repeat-x; background-size: 16px 8px; }
     .receipt-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9em; }
-    .receipt-table th { border-bottom: 2px solid var(--navy); padding: 8px; text-align: left; }
-    .receipt-table td { border-bottom: 1px solid #eee; padding: 8px; }
+    .receipt-table th { border-bottom: 2px dashed #cbd5e1; padding: 8px 0; text-align: left; color:#64748b; }
+    .receipt-table td { border-bottom: 1px solid #f1f5f9; padding: 10px 0; font-weight:500; }
     
-    #loading-modal, #common-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; }
-    .modal-content { background:white; padding:25px; border-radius:20px; width:85%; max-width:400px; text-align:center; }
-    #qr-reader { width: 100%; max-width: 350px; margin: 0 auto; border-radius: 15px; overflow: hidden; }
+    /* 로고 및 브랜딩 위치 */
+    .logo-box { position: absolute; top: 40px; left: 40px; display: flex; align-items: center; gap: 12px; }
+    .branding { position: absolute; bottom: 30px; width: 100%; text-align: center; color: var(--sub); font-size: 12px; }
+
+    #loading-modal, #common-modal, #setup-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; align-items:center; justify-content:center; }
+    #loading-modal, #common-modal { background:rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+    #setup-page { background:white; flex-direction:column; padding:20px; text-align:center; box-sizing:border-box; }
+    .modal-content { background:white; padding:32px; border-radius:28px; width:85%; max-width:340px; text-align:center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+    #qr-reader { width: 100%; max-width: 350px; margin: 0 auto; border-radius: 15px; overflow: hidden; background:white; }
+    .spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(32, 201, 151, 0.3); border-radius: 50%; border-top-color: var(--teal); animation: spin 1s ease-in-out infinite; margin-bottom: 15px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-<div id="page-home" class="page active" style="justify-content:center; align-items:center; gap:20px;">
-  <h1 style="color:var(--navy); margin-bottom:40px;">🛒 초리 상점</h1>
-  <button class="btn btn-main" style="width:250px; height:100px; font-size:1.5em;" onclick="navTo('page-kiosk')">🛍️ 키오스크 모드</button>
-  <button class="btn btn-sub" style="width:250px; height:100px; font-size:1.5em;" onclick="navTo('page-student-login')">📱 학생 지갑 모드</button>
-  <div onclick="adminAuth()" style="position:fixed; bottom:20px; right:20px; color:#ccc; font-size:0.8em; cursor:pointer; padding:10px;">관리자 설정</div>
+<div id="setup-page">
+  <img src="https://i.imgur.com/pNk2fly.png" width="100" style="margin-bottom:20px; border-radius:50%; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+  <h2 style="color:var(--navy); margin-bottom:10px;">데이터베이스 연결</h2>
+  <p style="color:var(--sub); font-size:15px; margin-bottom:30px; line-height:1.5;">구글 시트 연동을 위해 선생님의<br><b>'웹앱 배포 URL'</b>을 입력해주세요.</p>
+  <input type="text" id="api-url-input" placeholder="https://script.google.com/.../exec">
+  <button onclick="saveApiUrl()" class="btn btn-main" style="width:100%; margin-top:10px;">연결 및 시작하기</button>
 </div>
 
-<div id="page-student-login" class="page" style="padding:40px 20px;">
-  <button onclick="navTo('page-home')" style="background:none; border:none; font-size:1.5em; text-align:left;">🏠</button>
-  <h2 style="margin:20px 0;">로그인</h2>
-  <div class="card">
-    <input type="number" id="login-id" placeholder="학번 (예: 11011)" style="width:100%; padding:15px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px;">
-    <input type="password" id="login-pw" placeholder="비밀번호" style="width:100%; padding:15px; border:1px solid #ddd; border-radius:10px;">
+<div id="page-home" class="page active" style="justify-content:center; align-items:center; gap:16px;">
+  <div class="logo-box">
+    <img src="https://i.imgur.com/pNk2fly.png" style="width:50px; height:50px; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <div><div style="font-size:12px; color:var(--sub); text-align:left;">초리쌤의 콘텐츠</div><div style="font-size:20px; font-weight:900; color:var(--navy);">스마트 키오스크</div></div>
   </div>
-  <button class="btn btn-main" style="margin:10px;" onclick="login()">로그인하기</button>
+  <button class="btn btn-navy" style="width:280px; height:80px; font-size:20px; margin-top:20px;" onclick="navToKiosk()">🛍️ 키오스크 모드</button>
+  <button class="btn btn-main" style="width:280px; height:80px; font-size:20px;" onclick="navTo('page-student-login')">📱 학생 지갑 모드</button>
+  <div class="branding">© Chori-ssam. All Rights Reserved.<br><span onclick="openAdminAuth()" style="opacity:0.4; cursor:pointer; padding:15px; display:inline-block; margin-top:5px; font-weight:bold;">관리자 설정</span></div>
+</div>
+
+<div id="page-student-login" class="page" style="padding:40px 24px;">
+  <button onclick="navTo('page-home')" style="background:none; border:none; font-size:1.5em; text-align:left; cursor:pointer; padding:0; margin-bottom:20px;">🏠</button>
+  <h2 style="margin:0 0 20px 0; color:var(--navy);">지갑 로그인</h2>
+  <div class="card" style="padding:24px;">
+    <input type="number" id="login-id" placeholder="학번 (예: 11011)">
+    <input type="password" id="login-pw" placeholder="비밀번호 4자리">
+  </div>
+  <button class="btn btn-main" style="margin:10px;" onclick="login()">내 지갑 열기</button>
   <button class="btn btn-sub" style="margin:10px;" onclick="navTo('page-student-join')">✨ 처음인가요? 회원가입</button>
 </div>
 
-<div id="page-student-join" class="page" style="padding:20px; overflow-y:auto;">
-  <h2>회원가입</h2>
-  <div class="card" style="display:flex; flex-direction:column; gap:10px;">
-    <div style="display:flex; gap:5px;">
-      <input type="number" id="join-g" placeholder="학년" style="flex:1; padding:12px;">
-      <input type="number" id="join-c" placeholder="반" style="flex:1; padding:12px;">
-      <input type="number" id="join-n" placeholder="번호" style="flex:1; padding:12px;">
+<div id="page-student-join" class="page" style="padding:40px 24px; overflow-y:auto;">
+  <h2 style="color:var(--navy); margin-bottom:20px;">회원가입</h2>
+  <div class="card" style="display:flex; flex-direction:column; gap:5px; padding:24px;">
+    <div style="display:flex; gap:8px;">
+      <input type="number" id="join-g" placeholder="학년" style="flex:1;">
+      <input type="number" id="join-c" placeholder="반" style="flex:1;">
+      <input type="number" id="join-n" placeholder="번호" style="flex:1;">
     </div>
-    <input type="text" id="join-name" placeholder="이름" style="padding:12px;">
-    <input type="number" id="join-id" placeholder="학번(5자리)" style="padding:12px;">
-    <input type="password" id="join-pw" placeholder="비밀번호(4자리)" style="padding:12px;">
-    <input type="password" id="join-pw2" placeholder="비밀번호 확인" style="padding:12px;">
+    <input type="text" id="join-name" placeholder="이름">
+    <input type="number" id="join-id" placeholder="학번(5자리)">
+    <input type="password" id="join-pw" placeholder="비밀번호(4자리)">
+    <input type="password" id="join-pw2" placeholder="비밀번호 확인">
   </div>
-  <button class="btn btn-main" onclick="join()">가입 완료</button>
-  <button class="btn btn-sub" style="margin-top:10px;" onclick="navTo('page-student-login')">취소</button>
+  <button class="btn btn-main" style="margin:10px 10px 5px;" onclick="join()">가입 완료</button>
+  <button class="btn btn-sub" style="margin:5px 10px;" onclick="navTo('page-student-login')">돌아가기</button>
 </div>
 
-<div id="page-student-wallet" class="page" style="padding:20px;">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2 id="user-welcome">학생 지갑</h2>
-    <button class="btn btn-sub" onclick="navTo('page-home')">로그아웃</button>
+<div id="page-student-wallet" class="page" style="padding:24px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2 id="user-welcome" style="margin:0; color:var(--navy);">학생 지갑</h2>
+    <button class="btn btn-sub" style="padding:8px 16px; height:auto; font-size:14px;" onclick="navTo('page-home')">로그아웃</button>
   </div>
-  <div class="card" style="background:var(--navy); color:white; text-align:center;">
-    <div style="font-size:0.9em; opacity:0.8;">현재 잔액</div>
-    <div id="user-balance" style="font-size:2.5em; font-weight:700; margin:10px 0;">0원</div>
+  <div class="card" style="background: linear-gradient(135deg, var(--navy), #1a365d); color:white; text-align:center; border:none; padding:30px;">
+    <div style="font-size:14px; opacity:0.8;">현재 잔액</div>
+    <div id="user-balance" style="font-size:36px; font-weight:700; margin:10px 0;">0원</div>
+    <div style="font-size:12px; opacity:0.5; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px; margin-top:10px;">교실 경제 자산 현황</div>
   </div>
-  <button class="btn btn-main" style="height:100px; font-size:1.2em; margin-top:20px;" onclick="startScan()">📸 키오스크 결제 스캔</button>
-  <button class="btn btn-sub" style="margin-top:15px;" onclick="loadReceipts()">📜 내 영수증 내역 확인</button>
+  <button class="btn btn-main" style="height:80px; font-size:18px; margin-top:20px; box-shadow: 0 8px 20px rgba(32, 201, 151, 0.3);" onclick="startScan()">📸 키오스크 결제 스캔</button>
+  <button class="btn btn-navy" style="margin-top:15px; height:60px;" onclick="loadReceipts()">🧾 내 영수증 내역 확인</button>
 </div>
 
-<div id="page-scanner" class="page" style="padding:20px; background:#000;">
+<div id="page-scanner" class="page" style="padding:24px; background:#000;">
   <div id="qr-reader"></div>
-  <button class="btn btn-sub" style="margin-top:20px;" onclick="stopScan()">스캔 중단하고 지갑으로</button>
+  <button class="btn btn-sub" style="margin-top:30px;" onclick="stopScan()">스캔 중단하고 돌아가기</button>
 </div>
 
 <div id="page-kiosk" class="page">
-  <div style="padding:20px; background:white; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ddd;">
-    <h2 style="margin:0;">🛒 초리 상점</h2>
-    <button class="btn btn-sub" onclick="navTo('page-home')">🏠 홈으로</button>
+  <div style="height:60px; background:white; display:flex; align-items:center; justify-content:center; position:relative; border-bottom:1px solid #e9ecef;">
+    <div style="font-weight:700; color:var(--navy); font-size:18px;">🛒 초리 상점 상품 선택</div>
+    <div style="position:absolute; right:15px; cursor:pointer; font-size:24px;" onclick="navTo('page-home')">🏠</div>
   </div>
-  <div id="kiosk-items" style="flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:15px; padding:15px;"></div>
-  <div id="cart-bar" style="padding:20px; background:white; box-shadow:0 -4px 10px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
-    <div>총 <span id="cart-count" style="color:var(--teal); font-weight:700;">0</span>개</div>
-    <div id="cart-total" style="font-size:1.5em; font-weight:700;">0원</div>
-    <button class="btn btn-main" onclick="openKioskPay()">결제하기</button>
+  <div id="kiosk-items" style="flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:20px;"></div>
+  <div id="cart-bar" style="padding:24px; background:white; border-radius:32px 32px 0 0; box-shadow:0 -10px 40px rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center;">
+    <div><span style="color:var(--sub); font-size:14px;">총 결제금액</span><br><span id="cart-total" style="font-size:22px; font-weight:900; color:var(--teal);">0원</span></div>
+    <button class="btn btn-main" style="width:140px; height:60px; font-size:18px;" onclick="openKioskPay()">결제하기</button>
   </div>
 </div>
 
-<div id="page-admin" class="page" style="padding:20px; overflow-y:auto;">
-  <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-    <h2>💎 관리자 설정</h2>
-    <button class="btn btn-sub" onclick="navTo('page-home')">나가기</button>
+<div id="page-admin" class="page" style="padding:24px; overflow-y:auto;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h2 style="margin:0; color:var(--navy);">💎 관리자 설정</h2>
+    <button class="btn btn-sub" style="padding:8px 16px; height:auto;" onclick="navTo('page-home')">나가기</button>
   </div>
-  <div style="display:flex; gap:10px; margin-bottom:20px;">
-    <button class="btn btn-main" style="flex:1;" onclick="showAdminTab('prod')">상품 관리</button>
+  <div style="display:flex; gap:10px; margin-bottom:24px;">
+    <button class="btn btn-navy" style="flex:1;" onclick="showAdminTab('prod')">상품 관리</button>
     <button class="btn btn-main" style="flex:1;" onclick="showAdminTab('asset')">자산 관리</button>
   </div>
   <div id="admin-prod" class="admin-tab">
     <div class="card">
-      <h3>신규 상품 등록</h3>
-      <input type="text" id="p-cat" placeholder="카테고리" style="width:90%; padding:10px; margin:5px;">
-      <input type="text" id="p-name" placeholder="상품명" style="width:90%; padding:10px; margin:5px;">
-      <input type="number" id="p-price" placeholder="가격" style="width:90%; padding:10px; margin:5px;">
-      <input type="number" id="p-stock" placeholder="재고" style="width:90%; padding:10px; margin:5px;">
-      <input type="text" id="p-img" placeholder="이미지URL" style="width:90%; padding:10px; margin:5px;">
+      <input type="text" id="p-cat" placeholder="카테고리">
+      <input type="text" id="p-name" placeholder="상품명">
+      <input type="number" id="p-price" placeholder="가격">
+      <input type="number" id="p-stock" placeholder="재고">
+      <input type="text" id="p-img" placeholder="이미지 URL (선택)">
       <button class="btn btn-main" style="width:100%; margin-top:10px;" onclick="saveProduct()">상품 저장하기</button>
     </div>
   </div>
   <div id="admin-asset" class="admin-tab" style="display:none;">
     <div class="card">
-      <input type="text" id="as-q" placeholder="이름 또는 학번 검색" oninput="filterAdS()" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:10px;">
-      <div id="ad-s-list" style="max-height:300px; overflow-y:auto; margin-top:15px;"></div>
-      <hr>
-      <input type="number" id="as-amt" placeholder="지급/차감 금액 (+/-)" style="width:100%; padding:12px; margin:10px 0;">
-      <button class="btn btn-main" style="width:100%;" onclick="applyAdS()">일괄 적용하기</button>
+      <input type="text" id="as-q" placeholder="이름 또는 학번 검색" oninput="filterAdS()">
+      <div id="ad-s-list" style="max-height:300px; overflow-y:auto; margin-top:15px; border-top:1px solid #f1f5f9; padding-top:10px;"></div>
+      <hr style="border:0; border-bottom:1px dashed #cbd5e1; margin:20px 0;">
+      <input type="number" id="as-amt" placeholder="지급/차감 금액 (예: 500, -200)">
+      <button class="btn btn-main" style="width:100%;" onclick="applyAdS()">선택 학생 일괄 적용</button>
     </div>
   </div>
 </div>
 
-<div id="loading-modal"><div class="modal-content"><div style="border:4px solid #f3f3f3; border-top:4px solid var(--teal); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 15px;"></div><p id="loading-msg">처리 중...</p></div></div>
+<div id="loading-modal"><div class="modal-content"><div class="spinner"></div><div id="loading-msg" style="color:var(--navy); font-weight:700; margin-top:10px;">처리 중...</div></div></div>
 <div id="common-modal"><div id="modal-body" class="modal-content"></div></div>
 
 <script>
   let apiUrl = localStorage.getItem('chori_api');
   let user = null, cart = [], products = [], scanner = null;
+  let isScanningBlocked = false; 
   const f = (n) => Number(n).toLocaleString() + '원';
 
   window.onload = () => {
     const params = new URLSearchParams(window.location.search);
-    if(params.get('api')) { apiUrl = params.get('api'); localStorage.setItem('chori_api', apiUrl); }
-    if(!apiUrl) { 
-      const input = prompt("구글 웹앱 URL을 입력해주세요:");
-      if(input) { apiUrl = input; localStorage.setItem('chori_api', apiUrl); }
+    if(params.get('api')) { 
+      apiUrl = params.get('api'); 
+      localStorage.setItem('chori_api', apiUrl); 
+      window.history.replaceState({}, document.title, window.location.pathname); 
     }
-    loadProducts();
+    if(!apiUrl) { 
+      document.getElementById('setup-page').style.display = 'flex'; 
+    } else {
+      document.getElementById('setup-page').style.display = 'none';
+      loadProducts();
+    }
   };
+
+  function saveApiUrl() {
+    const input = document.getElementById('api-url-input').value.trim();
+    if(input.includes('exec')) { localStorage.setItem('chori_api', input); location.reload(); }
+    else alert("정확한 구글 웹앱 주소를 입력하세요.");
+  }
 
   function navTo(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
+  // 로딩 화면을 보여주고 키오스크 진입
+  async function navToKiosk() {
+    showLoading(true, "진열대를 정리하고 있습니다...");
+    await loadProducts();
+    showLoading(false);
+    navTo('page-kiosk');
+  }
+
   async function callApi(func, args = []) {
     showLoading(true);
     try {
-      const res = await fetch(apiUrl, { method: 'POST', body: JSON.stringify({ functionName: func, arguments: args }) });
+      const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ functionName: func, arguments: args }) });
       const data = await res.json();
       showLoading(false);
       return data;
-    } catch(e) { showLoading(false); alert("통신 오류 발생!"); return { success: false }; }
+    } catch(e) { 
+      showLoading(false); 
+      alert("통신 오류가 발생했습니다. 구글 시트 주소를 다시 확인해주세요."); 
+      return { success: false }; 
+    }
   }
 
-  function showLoading(s, msg="처리 중...") {
+  function showLoading(s, msg="데이터를 처리하는 중입니다...") {
     document.getElementById('loading-msg').innerText = msg;
     document.getElementById('loading-modal').style.display = s ? 'flex' : 'none';
   }
 
   function modal(title, msg, btnHtml = `<button class="btn btn-main" style="width:100%" onclick="closeModal()">확인</button>`) {
-    document.getElementById('modal-body').innerHTML = `<h3 style="margin-top:0">${title}</h3><p style="margin:20px 0; line-height:1.6;">${msg}</p>${btnHtml}`;
+    document.getElementById('modal-body').innerHTML = `<h3 style="margin:0 0 16px 0; color:var(--navy); font-weight:900;">${title}</h3><div style="margin-bottom:24px; line-height:1.6; color:var(--sub); font-size:15px;">${msg}</div>${btnHtml}`;
     document.getElementById('common-modal').style.display = 'flex';
   }
   function closeModal() { document.getElementById('common-modal').style.display = 'none'; }
+
+  /* --- 관리자 인증 커스텀 모달 --- */
+  function openAdminAuth() {
+    modal("관리자 설정", "선생님 전용 PIN 번호를 입력해주세요.", `
+      <input type="password" id="admin-pin-input" placeholder="PIN 번호 4자리" style="text-align:center; letter-spacing:10px; font-weight:bold; font-size:20px;">
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-sub" style="flex:1" onclick="closeModal()">취소</button>
+        <button class="btn btn-main" style="flex:1" onclick="checkAdminAuth()">확인</button>
+      </div>
+    `);
+  }
+  function checkAdminAuth() {
+    const pin = document.getElementById('admin-pin-input').value;
+    if(pin === '5863') { closeModal(); navTo('page-admin'); }
+    else { alert("PIN 번호가 일치하지 않습니다."); document.getElementById('admin-pin-input').value = ''; }
+  }
 
   /* --- 학생 지갑 로직 --- */
   async function login() {
     const id = document.getElementById('login-id').value;
     const pw = document.getElementById('login-pw').value;
+    if(!id || !pw) return modal("알림", "학번과 비밀번호를 입력해주세요.");
     const res = await callApi('loginStudent', [id, pw]);
     if(res.success) {
       user = res.user;
-      document.getElementById('user-welcome').innerText = `${user.name}님의 지갑`;
+      document.getElementById('user-welcome').innerText = `${user.name} 학생`;
       document.getElementById('user-balance').innerText = f(user.balance);
       navTo('page-student-wallet');
-    } else modal("오류", res.msg);
+    } else modal("로그인 실패", res.msg);
   }
 
   async function join() {
     const s = {
-      grade: document.getElementById('join-g').value,
-      class: document.getElementById('join-c').value,
-      num: document.getElementById('join-n').value,
-      name: document.getElementById('join-name').value,
-      id: document.getElementById('join-id').value,
-      pw: document.getElementById('join-pw').value
+      grade: document.getElementById('join-g').value, class: document.getElementById('join-c').value,
+      num: document.getElementById('join-n').value, name: document.getElementById('join-name').value,
+      id: document.getElementById('join-id').value, pw: document.getElementById('join-pw').value
     };
     const pw2 = document.getElementById('join-pw2').value;
     if(!s.name || !s.id || !s.pw) return modal("알림", "모든 정보를 입력하세요.");
     if(s.pw !== pw2) return modal("알림", "비밀번호가 일치하지 않습니다.");
     const res = await callApi('registerStudent', [s]);
-    if(res.success) { modal("성공", "회원가입 완료! 기본 1,000원이 지급되었습니다."); navTo('page-student-login'); }
-    else modal("오류", res.msg);
+    if(res.success) { modal("가입 성공", "회원가입이 완료되었습니다.<br><span style='color:var(--teal); font-weight:bold;'>기본 자산 1,000원이 지급되었습니다!</span>"); navTo('page-student-login'); }
+    else modal("가입 실패", res.msg);
   }
 
   function startScan() {
     navTo('page-scanner');
+    isScanningBlocked = false;
     if(!scanner) scanner = new Html5Qrcode("qr-reader");
     scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
-      (text) => { confirmPayment(text); },
-      (err) => {}
+      (text) => { 
+        if(isScanningBlocked) return;
+        isScanningBlocked = true;
+        confirmPayment(text); 
+      },
+      (err) => {} 
     ).catch(e => {
-      modal("카메라 에러", "카메라 접근이 차단되었거나 오류가 발생했습니다.");
+      modal("카메라 에러", "카메라 접근이 차단되었거나 기기 오류가 발생했습니다.");
       navTo('page-student-wallet');
     });
   }
 
   function stopScan() { 
-    if(scanner) scanner.stop().then(() => navTo('page-student-wallet'));
+    if(scanner) scanner.stop().then(() => navTo('page-student-wallet')).catch(()=>navTo('page-student-wallet'));
     else navTo('page-student-wallet');
   }
 
   function confirmPayment(payId) {
-    scanner.pause();
-    modal("결제 승인", "해당 키오스크 결제를 승인하시겠습니까?", `
+    modal("결제 승인", "키오스크의 결제를 승인하시겠습니까?", `
       <div style="display:flex; gap:10px;">
-        <button class="btn btn-main" style="flex:1" onclick="approvePay('${payId}')">승인하기</button>
         <button class="btn btn-sub" style="flex:1" onclick="resumeScan()">취소</button>
+        <button class="btn btn-main" style="flex:1" onclick="approvePay('${payId}')">승인하기</button>
       </div>
     `);
   }
-  function resumeScan() { closeModal(); scanner.resume(); }
+  function resumeScan() { closeModal(); isScanningBlocked = false; } 
 
   async function approvePay(payId) {
     const res = await callApi('approvePayment', [payId, user.id]);
     if(res.success) {
       user.balance = res.balance;
       document.getElementById('user-balance').innerText = f(user.balance);
-      modal("결제 완료", `성공적으로 결제되었습니다.<br><b>남은 잔액: ${f(user.balance)}</b>`, `
+      modal("🎉 결제 완료", `정상적으로 결제되었습니다.<br><br><span style="color:var(--teal); font-weight:900; font-size:24px;">남은 잔액: ${f(user.balance)}</span>`, `
         <button class="btn btn-main" style="width:100%" onclick="stopScan()">지갑으로 돌아가기</button>
       `);
     } else {
@@ -243,61 +311,67 @@
   async function loadReceipts() {
     const data = await callApi('getReceipts', [user.id]);
     let html = data.map(r => {
-      let itemsStr = r.items.map(i => `<tr><td>${i.name}</td><td>${f(i.price)}</td><td>${i.qty}</td><td>${f(i.price*i.qty)}</td></tr>`).join('');
+      let itemsStr = r.items.map(i => `<tr><td>${i.name}</td><td>${f(i.price)}</td><td>${i.qty}</td><td style="text-align:right; color:var(--navy);">${f(i.price*i.qty)}</td></tr>`).join('');
       return `
-        <div class="card" style="text-align:left; font-size:0.85em;">
-          <div style="border-bottom:1px dashed #ccc; padding-bottom:5px; margin-bottom:5px;">📅 ${new Date(r.date).toLocaleString()}</div>
+        <div class="receipt-paper" style="text-align:left;">
+          <h3 style="text-align:center; margin:0 0 10px 0; color:#111;">초리 상점 영수증</h3>
+          <div style="font-size:12px; color:#94a3b8; text-align:center; margin-bottom:15px;">${r.date}</div>
           <table class="receipt-table">
-            <thead><tr><th>상품</th><th>단가</th><th>수</th><th>금액</th></tr></thead>
+            <thead><tr><th>상품명</th><th>단가</th><th>수량</th><th style="text-align:right;">금액</th></tr></thead>
             <tbody>${itemsStr}</tbody>
           </table>
-          <div style="text-align:right; font-weight:700; font-size:1.1em;">합계: ${f(r.total)}</div>
+          <div style="border-top:2px dashed #cbd5e1; margin:15px 0 10px 0;"></div>
+          <div style="display:flex; justify-content:space-between; font-weight:900; font-size:18px;">
+            <span>합계 금액</span><span style="color:var(--teal);">${f(r.total)}</span>
+          </div>
         </div>`;
     }).join('');
-    modal("내 영수증 내역", html || "내역이 없습니다.");
+    modal("내 영수증 내역", `<div style="max-height:60vh; overflow-y:auto; padding:5px;">${html || "<div style='padding:30px; text-align:center;'>결제 내역이 없습니다.</div>"}</div>`);
   }
 
   /* --- 키오스크 로직 --- */
   async function loadProducts() {
     const res = await callApi('getProducts');
-    if(res.success) {
+    if(res.success && res.data) {
       products = res.data;
       document.getElementById('kiosk-items').innerHTML = products.map(p => `
-        <div class="card" style="padding:10px; text-align:center;" onclick="addToCart('${p.name}')">
-          <img src="${p.img || 'https://via.placeholder.com/100'}" style="width:100%; height:80px; object-fit:cover; border-radius:10px;">
-          <div style="font-weight:700; margin:5px 0;">${p.name}</div>
-          <div style="color:var(--teal); font-size:0.9em;">${f(p.price)}</div>
+        <div class="card" style="padding:16px; text-align:center; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.03); margin:0;" onclick="addToCart('${p.id}')">
+          <img src="${p.img || 'https://i.imgur.com/pNk2fly.png'}" style="width:100%; height:90px; object-fit:contain; margin-bottom:12px;">
+          <div style="font-weight:700; color:var(--navy); font-size:15px;">${p.name}</div>
+          <div style="color:var(--teal); font-size:16px; font-weight:900; margin-top:8px;">${f(p.price)}</div>
         </div>
       `).join('');
     }
   }
 
-  function addToCart(name) {
-    const p = products.find(x => x.name === name);
-    const exist = cart.find(x => x.name === name);
+  function addToCart(id) {
+    const p = products.find(x => x.id === id);
+    const exist = cart.find(x => x.id === id);
     if(exist) exist.qty++; else cart.push({ ...p, qty: 1 });
     updateCart();
   }
 
   function updateCart() {
-    const count = cart.reduce((a, b) => a + b.qty, 0);
     const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-    document.getElementById('cart-count').innerText = count;
     document.getElementById('cart-total').innerText = f(total);
   }
 
   async function openKioskPay() {
-    if(cart.length === 0) return modal("알림", "상품을 담아주세요.");
+    if(cart.length === 0) return modal("알림", "담은 상품이 없습니다.");
     const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
     const res = await callApi('createPaymentRequest', [total, cart.map(i => ({name:i.name, price:i.price, qty:i.qty}))]);
     if(res.success) {
-      const itemsHtml = cart.map(i => `<div>${i.name} ${i.qty}개 (${f(i.price*i.qty)})</div>`).join('');
+      const itemsHtml = cart.map(i => `<div style="margin-bottom:8px; display:flex; justify-content:space-between;"><span>${i.name} (${i.qty}개)</span> <b>${f(i.price*i.qty)}</b></div>`).join('');
       modal("결제 대기 중", `
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${res.payId}" style="width:200px; height:200px; margin:10px 0;">
-        <div style="background:#f1f3f5; padding:10px; border-radius:10px; font-size:0.9em; text-align:left;">
-          <b>[구매 내역]</b><br>${itemsHtml}<hr><b>총액: ${f(total)}</b>
+        <div style="font-weight:900; color:var(--teal); margin-bottom:15px; font-size:18px;">학생 지갑 앱으로 스캔해주세요</div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${res.payId}" style="width:180px; height:180px; border-radius:16px; border:1px solid #e9ecef; padding:10px; background:white;">
+        <div style="background:#f8f9fa; padding:20px; border-radius:16px; font-size:15px; text-align:left; color:var(--navy); margin-top:20px;">
+          <div style="font-weight:900; margin-bottom:12px; color:#868e96;">[주문 상품 목록]</div>
+          ${itemsHtml}
+          <div style="border-top:2px dashed #ced4da; margin:15px 0;"></div>
+          <div style="font-weight:900; font-size:20px; text-align:right; color:var(--navy);">총 결제금액: ${f(total)}</div>
         </div>
-      `, `<button class="btn btn-sub" style="width:100%" onclick="closeModal(); stopPolling();">결제 취소</button>`);
+      `, `<button class="btn btn-sub" style="width:100%" onclick="closeModal(); stopPolling();">주문 취소하기</button>`);
       startPolling(res.payId);
     }
   }
@@ -307,30 +381,26 @@
     pollTimer = setInterval(async () => {
       const res = await callApi('checkPaymentStatus', [id]);
       if(res.status === 'COMPLETED') {
-        stopPolling();
-        modal("결제 완료", "성공적으로 결제되었습니다! 이용해주셔서 감사합니다.", `<button class="btn btn-main" style="width:100%" onclick="location.reload()">키오스크 상점으로 돌아가기</button>`);
+        stopPolling(); cart = []; updateCart();
+        modal("🎉 결제 완료", "정상적으로 결제되었습니다!<br>이용해주셔서 감사합니다.", `<button class="btn btn-main" style="width:100%" onclick="closeModal()">상점 메인으로 돌아가기</button>`);
       } else if(res.status === 'INSUFFICIENT') {
         stopPolling();
-        modal("결제 실패", "학생의 잔액이 부족하여 결제가 취소되었습니다.", `<button class="btn btn-main" style="width:100%" onclick="closeModal()">확인</button>`);
+        modal("결제 실패", "학생의 잔액이 부족하여 결제가 취소되었습니다.", `<button class="btn btn-sub" style="width:100%" onclick="closeModal()">확인</button>`);
       }
     }, 2000);
   }
   function stopPolling() { clearInterval(pollTimer); }
 
   /* --- 관리자 로직 --- */
-  function adminAuth() {
-    if(prompt("PIN 번호를 입력하세요") === '5863') navTo('page-admin');
-    else alert("틀렸습니다.");
-  }
   function showAdminTab(id) {
     document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
     document.getElementById('admin-' + id).style.display = 'block';
     if(id === 'asset') loadAdminStudents();
   }
   async function saveProduct() {
-    const p = { category: document.getElementById('p-cat').value, name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, stock: document.getElementById('p-stock').value, img: document.getElementById('p-img').value };
+    const p = { id: '', category: document.getElementById('p-cat').value, name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, stock: document.getElementById('p-stock').value, img: document.getElementById('p-img').value };
     const res = await callApi('saveProduct', [p]);
-    if(res.success) { modal("성공", "상품이 저장되었습니다."); loadProducts(); }
+    if(res.success) { modal("저장 완료", "상품 정보가 업데이트되었습니다."); loadProducts(); }
   }
   let adminStudents = [];
   async function loadAdminStudents() {
@@ -339,24 +409,23 @@
   }
   function renderAdS(data) {
     document.getElementById('ad-s-list').innerHTML = data.map(s => `
-      <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #eee;">
-        <input type="checkbox" class="as-check" value="${s.id}">
-        <div style="flex:1;"><b>${s.grade}-${s.class}-${s.num} ${s.name}</b></div>
-        <div style="font-weight:700;">${f(s.balance)}</div>
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #f1f5f9;">
+        <input type="checkbox" class="as-check" value="${s.id}" style="width:24px; height:24px; margin:0; flex-shrink:0;">
+        <div style="flex:1;"><b style="color:var(--navy); font-size:16px;">${s.grade}학년 ${s.class}반 ${s.name}</b><br><small style="color:var(--sub);">ID: ${s.id}</small></div>
+        <div style="font-weight:900; color:var(--teal); font-size:18px;">${f(s.balance)}</div>
       </div>`).join('');
   }
   function filterAdS() {
     const q = document.getElementById('as-q').value.toLowerCase();
-    renderAdS(adminStudents.filter(s => s.name.includes(q) || s.id.includes(q)));
+    renderAdS(adminStudents.filter(s => s.name.includes(q) || s.id.toString().includes(q)));
   }
   async function applyAdS() {
     const ids = Array.from(document.querySelectorAll('.as-check:checked')).map(c=>c.value);
     const amt = document.getElementById('as-amt').value;
-    if(ids.length === 0 || !amt) return alert("대상을 선택하고 금액을 입력하세요.");
+    if(ids.length === 0 || !amt) return modal("알림", "대상을 선택하고 금액을 정확히 입력하세요.");
     const res = await callApi('updateAdminAsset', [ids, amt]);
-    if(res.success) { modal("성공", "정상 적용되었습니다."); loadAdminStudents(); }
+    if(res.success) { modal("적용 완료", "선택한 학생들의 자산이 변동되었습니다."); loadAdminStudents(); }
   }
 </script>
-<style>@keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }</style>
 </body>
 </html>
